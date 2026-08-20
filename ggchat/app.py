@@ -55,6 +55,11 @@ class ChatApp:
             while dpg.is_dearpygui_running():
                 self._drain_audio_events()
                 dpg.render_dearpygui_frame()
+        except KeyboardInterrupt:
+            # Ctrl+C is an expected way to close the app when launched from a
+            # terminal. Let the shared cleanup below release audio and GUI
+            # resources without printing a traceback.
+            pass
         finally:
             self.audio.close()
             dpg.destroy_context()
