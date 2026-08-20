@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import deque
 from datetime import datetime
 from queue import Empty, SimpleQueue
+import re
 import uuid
 
 import dearpygui.dearpygui as dpg
@@ -20,6 +21,13 @@ from .protocol import (
     normalize_name,
     truncate_utf8,
 )
+
+
+def mentions_user(message: str, nickname: str) -> bool:
+    """Return whether message contains an exact, case-sensitive @mention."""
+    name_character = r"[A-Za-z0-9-]"
+    pattern = rf"(?<!{name_character})@{re.escape(nickname)}(?!{name_character})"
+    return re.search(pattern, message) is not None
 
 
 class ChatApp:
@@ -58,6 +66,9 @@ class ChatApp:
         with dpg.theme(tag="incoming_theme"):
             with dpg.theme_component(dpg.mvText):
                 dpg.add_theme_color(dpg.mvThemeCol_Text, (225, 225, 225))
+        with dpg.theme(tag="mention_theme"):
+            with dpg.theme_component(dpg.mvText):
+                dpg.add_theme_color(dpg.mvThemeCol_Text, (255, 105, 105))
         with dpg.theme(tag="error_theme"):
             with dpg.theme_component(dpg.mvText):
                 dpg.add_theme_color(dpg.mvThemeCol_Text, (255, 105, 105))
@@ -218,7 +229,11 @@ class ChatApp:
         item = dpg.add_text(
             f"[{timestamp}] {nickname}: {message}", parent="history", wrap=700
         )
-        dpg.bind_item_theme(item, "outgoing_theme" if outgoing else "incoming_theme")
+        if mentions_user(message, self.nickname):
+            theme = "mention_theme"
+        else:
+            theme = "outgoing_theme" if outgoing else "incoming_theme"
+        dpg.bind_item_theme(item, theme)
         self.message_items.append(item)
         if len(self.message_items) > 500:
             dpg.delete_item(self.message_items.popleft())
