@@ -84,7 +84,7 @@ class ChatApp:
                 on_enter=True,
                 callback=self._join,
             )
-            dpg.add_text("1–10 ASCII letters/digits; single hyphens may separate parts.")
+            dpg.add_text("1-10 ASCII letters/digits; single hyphens may separate parts.")
             dpg.add_spacer(height=8)
             dpg.add_button(tag="join_button", label="Join", callback=self._join, width=100)
             dpg.add_loading_indicator(tag="join_loading", show=False, radius=2.5)
@@ -128,7 +128,7 @@ class ChatApp:
     def _build_chat(self) -> None:
         with dpg.window(tag="chat_window", label="ggchat", no_close=True):
             with dpg.group(horizontal=True):
-                dpg.add_text(f"{self.nickname}  •  #{self.room}", color=(105, 190, 255))
+                dpg.add_text(f"{self.nickname}  |  #{self.room}", color=(105, 190, 255))
                 dpg.add_spacer(width=12)
                 dpg.add_text("Listening", tag="audio_status", color=(125, 220, 145))
                 dpg.add_button(
@@ -274,7 +274,7 @@ class ChatApp:
 
     def _retry_audio(self, sender=None, app_data=None, user_data=None) -> None:  # noqa: ANN001
         dpg.configure_item("retry_audio", enabled=False)
-        dpg.set_value("send_status", "Reopening default audio devices…")
+        dpg.set_value("send_status", "Reopening default audio devices...")
         try:
             self.audio.start()
         except Exception as exc:
