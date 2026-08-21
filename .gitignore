@@ -6,5 +6,10 @@ dist/
 wheels/
 *.egg-info
 
+# Nuitka
+*.build/
+*.dist/
+*.onefile-build/
+
 # Virtual environments
 .venv
