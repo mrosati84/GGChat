@@ -1,53 +1,70 @@
 # ggchat
 
-`ggchat` is a small, ephemeral desktop chat that broadcasts text through
-ultrasound. Dear PyGui provides the interface, ggwave encodes and decodes the
-data, and sounddevice connects it to the default microphone and speaker.
-
-Messages are filtered locally by a case-sensitive room name. Rooms are not
-private: there is no encryption, authentication, delivery acknowledgement, or
-collision avoidance.
+`ggchat` is a tiny desktop chat that sends text through sound instead of a
+network. Nearby computers exchange short messages over ggwave's ultrasonic
+audio protocol; no server, account, or internet connection is involved.
 
 ## Requirements
 
-- Python 3.11 or newer
-- A microphone and speaker capable of handling ggwave's ultrasonic frequencies
-- OS permission to use the microphone
+- Python 3.11 or newer and [uv](https://docs.astral.sh/uv/)
+- A microphone and speaker that support mono audio at 48 kHz
+- Permission for the application or terminal to access the microphone
 
-## Run
+Ultrasound performance depends heavily on the audio hardware. Laptop speakers
+and microphones work best at short range in a quiet room.
+
+## Run and use
 
 ```bash
 uv sync
 uv run python -m ggchat
 ```
 
-The installed `ggchat` command is equivalent.
+To create a standalone executable with Nuitka, run `make`; the result is
+written to `dist/ggchat`. Run `make clean` to remove build artifacts.
 
-On startup, choose a nickname and room. Each must be 1–10 ASCII letters or
-digits, with optional single hyphens between parts, such as `matteo`, `games`,
-or `ita-dev`.
+On every computer:
 
-Messages are single-line and limited to 98 UTF-8 bytes. The UI displays the
-current byte count because accented characters occupy more than one byte.
+1. Choose a nickname and the same case-sensitive room name.
+2. Press **Join** and allow microphone access.
+3. Type a message and press **Enter** or **Send**.
 
-## Test
+Names are 1–10 ASCII letters or digits, with optional single hyphens. Messages
+are single-line and limited to 98 UTF-8 bytes. An exact `@nickname` mention is
+highlighted.
+
+## How it works
+
+[ggwave](https://github.com/ggerganov/ggwave) acts as a small data-over-sound
+modem. For each message, `ggchat` builds a binary packet containing a protocol
+version, UUID, room, nickname, and UTF-8 text. ggwave encodes that packet with
+its **Ultrasound Normal** protocol into a waveform, which `sounddevice` plays as
+48 kHz mono audio.
+
+At the same time, the microphone continuously feeds audio blocks to a ggwave
+decoder. Valid packets for the selected room are shown in the Dear PyGui
+interface. UUIDs suppress loopback and duplicate messages; room filtering
+happens locally and provides organization, not privacy.
+
+## Current limitations
+
+- No encryption, authentication, persistent history, or user discovery
+- No delivery acknowledgement, retry, or collision handling
+- Limited range and reliability; noise, walls, and weak ultrasonic hardware
+  can prevent delivery
+- Simultaneous transmissions may interfere, and only one local message can be
+  sent at a time
+- Uses only the system's default audio devices and supports messages up to 98
+  UTF-8 bytes
+
+## Possible directions
+
+The project could add device and protocol selection, acknowledgements and
+retries, encrypted rooms and identities, multi-packet messages or small file
+transfers, and optional network relays that bridge separate acoustic spaces.
+
+## Tests
 
 ```bash
 uv run pytest
 ```
-
-## Protocol
-
-The application payload is a versioned binary packet capped at ggwave's
-140-byte variable-payload maximum:
-
-```text
-magic(2) | version(1) | UUIDv4(16) |
-room length(1) | nickname length(1) | message length(1) |
-room(1–10) | nickname(1–10) | message(1–98)
-```
-
-UUIDs suppress loopback and duplicate messages. Packets with another room,
-unknown framing, invalid fields, or an unsupported protocol version are ignored.
-All chat history and configuration exist only in memory and disappear when the
-application exits.
