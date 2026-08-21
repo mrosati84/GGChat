@@ -1,5 +1,7 @@
 # ggchat
 
+![ggchat application](screenshot.png)
+
 `ggchat` is a tiny desktop chat that sends text through sound instead of a
 network. Nearby computers exchange short messages over ggwave's ultrasonic
 audio protocol; no server, account, or internet connection is involved.
